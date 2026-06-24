@@ -1,55 +1,37 @@
-import { Response, NextFunction } from 'express';
+import { Request } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.model';
-import ErrorResponse from '../utils/errorResponse';
-import asyncHandler from './asyncHandler';
-import { AuthRequest } from '../types';
+import { GraphQLContext, IUser } from '../types';
+import { AuthenticationError, ForbiddenError } from 'apollo-server-express';
 
-export const protect = asyncHandler(async (req: AuthRequest, _res: Response, next: NextFunction) => {
-  let token: string | undefined;
+export const getContextFromRequest = async (req: Request): Promise<GraphQLContext> => {
+  let user: IUser | undefined;
 
-  if (req.headers.authorization?.startsWith('Bearer')) {
-    token = req.headers.authorization.split(' ')[1];
-  }
-
-  if (!token) return next(new ErrorResponse('Not authorized', 401));
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
-    const user = await User.findById(decoded.id).select('-password');
-    if (!user) return next(new ErrorResponse('User not found', 401));
-    if (user.status === 'banned') return next(new ErrorResponse('Account banned', 403));
-    if (user.status === 'suspended') return next(new ErrorResponse('Account suspended', 403));
-    req.user = user;
-    next();
-  } catch {
-    return next(new ErrorResponse('Not authorized', 401));
-  }
-});
-
-export const authorize = (...roles: string[]) =>
-  (req: AuthRequest, _res: Response, next: NextFunction): void => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return next(new ErrorResponse(`Role '${req.user?.role}' not authorized`, 403));
-    }
-    next();
-  };
-
-export const optionalAuth = asyncHandler(async (req: AuthRequest, _res: Response, next: NextFunction) => {
-  let token: string | undefined;
-
-  if (req.headers.authorization?.startsWith('Bearer')) {
-    token = req.headers.authorization.split(' ')[1];
-  }
-
-  if (token) {
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
-      req.user = (await User.findById(decoded.id).select('-password')) ?? undefined;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
+      const found = await User.findById(decoded.id).select('-password');
+      if (found) user = found;
     } catch {
-      req.user = undefined;
+      // invalid token — user stays undefined (guest)
     }
   }
 
-  next();
-});
+  return { user, req };
+};
+
+// Guard helpers used inside resolvers
+export const requireAuth = (context: GraphQLContext): IUser => {
+  if (!context.user) throw new AuthenticationError('You must be logged in');
+  if (context.user.status === 'banned') throw new ForbiddenError('Account banned');
+  if (context.user.status === 'suspended') throw new ForbiddenError('Account suspended');
+  return context.user;
+};
+
+export const requireRole = (context: GraphQLContext, ...roles: string[]): IUser => {
+  const user = requireAuth(context);
+  if (!roles.includes(user.role)) throw new ForbiddenError(`Role '${user.role}' not authorized`);
+  return user;
+};

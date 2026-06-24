@@ -11,7 +11,7 @@ cloudinary.config({
 const listingStorage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: 'shuk/listings',
+    folder: 'marketplace/listings',
     allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
     transformation: [{ width: 1200, height: 900, crop: 'limit', quality: 'auto' }],
   } as object,
@@ -20,7 +20,7 @@ const listingStorage = new CloudinaryStorage({
 const profileStorage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: 'shuk/profiles',
+    folder: 'marketplace/profiles',
     allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
     transformation: [{ width: 400, height: 400, crop: 'fill', quality: 'auto' }],
   } as object,
@@ -29,7 +29,7 @@ const profileStorage = new CloudinaryStorage({
 const documentStorage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: 'shuk/verification',
+    folder: 'marketplace/verification',
     allowed_formats: ['jpg', 'jpeg', 'png', 'pdf'],
     resource_type: 'auto',
   } as object,

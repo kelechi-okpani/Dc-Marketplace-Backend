@@ -1,21 +1,16 @@
 import { Request } from 'express';
 import { Document, Types } from 'mongoose';
 
-// ─── Auth ────────────────────────────────────────────────────────────────────
-
 export type UserRole =
-  | 'buyer'
-  | 'seller'
-  | 'moderator'
-  | 'category_manager'
-  | 'state_coordinator'
-  | 'admin'
-  | 'super_admin';
+  | 'buyer' | 'seller' | 'moderator'
+  | 'category_manager' | 'state_coordinator'
+  | 'admin' | 'super_admin';
 
 export type UserStatus = 'active' | 'suspended' | 'banned' | 'pending';
 export type VerificationBadge = 'none' | 'basic' | 'premium';
 
 export interface IUser extends Document {
+  _id: Types.ObjectId;
   name: string;
   email?: string;
   phone?: string;
@@ -56,66 +51,21 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   getSignedJwtToken(): string;
-  matchPassword(enteredPassword: string): Promise<boolean>;
+  matchPassword(entered: string): Promise<boolean>;
   getEmailVerificationToken(): string;
   generateOTP(): string;
   getResetPasswordToken(): string;
 }
 
-// ─── Category ─────────────────────────────────────────────────────────────────
-
-export type FieldType = 'text' | 'number' | 'select' | 'multiselect' | 'boolean' | 'date';
-
-export interface IField {
-  name: string;
-  label: string;
-  type: FieldType;
-  options?: string[];
-  required: boolean;
-  order: number;
-}
-
-export interface ICategory extends Document {
-  name: string;
-  slug: string;
-  description?: string;
-  icon?: string;
-  image?: string;
-  parent?: Types.ObjectId;
-  isActive: boolean;
-  order: number;
-  isHighRisk: boolean;
-  requiresAdminReview: boolean;
-  customFields: IField[];
-  prohibitedKeywords: string[];
-  metaTitle?: string;
-  metaDescription?: string;
-  totalListings: number;
-  activeListings: number;
-}
-
-// ─── Listing ──────────────────────────────────────────────────────────────────
-
 export type ListingStatus =
-  | 'draft'
-  | 'pending_review'
-  | 'active'
-  | 'paused'
-  | 'sold'
-  | 'expired'
-  | 'rejected'
-  | 'removed';
+  | 'draft' | 'pending_review' | 'active'
+  | 'paused' | 'sold' | 'expired' | 'rejected' | 'removed';
 
 export type ModerationStatus = 'pending' | 'approved' | 'rejected' | 'flagged';
 export type Condition = 'new' | 'used' | 'refurbished' | 'not_applicable';
 
-export interface IListingImage {
-  url: string;
-  publicId: string;
-  isPrimary: boolean;
-}
-
 export interface IListing extends Document {
+  _id: Types.ObjectId;
   title: string;
   description: string;
   price?: number;
@@ -125,7 +75,7 @@ export interface IListing extends Document {
   category: Types.ObjectId;
   subcategory?: Types.ObjectId;
   seller: Types.ObjectId;
-  images: IListingImage[];
+  images: Array<{ url: string; publicId: string; isPrimary: boolean }>;
   state: string;
   city?: string;
   lga?: string;
@@ -139,7 +89,6 @@ export interface IListing extends Document {
   moderatedBy?: Types.ObjectId;
   moderatedAt?: Date;
   moderationNote?: string;
-  availableUntil?: Date;
   isSold: boolean;
   soldAt?: Date;
   isFeatured: boolean;
@@ -154,14 +103,34 @@ export interface IListing extends Document {
   isFlagged: boolean;
   tags: string[];
   expiresAt?: Date;
-  renewedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// ─── Chat ─────────────────────────────────────────────────────────────────────
+export interface ICategory extends Document {
+  _id: Types.ObjectId;
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  image?: string;
+  parent?: Types.ObjectId;
+  isActive: boolean;
+  order: number;
+  isHighRisk: boolean;
+  requiresAdminReview: boolean;
+  customFields: Array<{
+    name: string; label: string;
+    type: string; options?: string[];
+    required: boolean; order: number;
+  }>;
+  prohibitedKeywords: string[];
+  totalListings: number;
+  activeListings: number;
+}
 
 export interface IConversation extends Document {
+  _id: Types.ObjectId;
   listing: Types.ObjectId;
   buyer: Types.ObjectId;
   seller: Types.ObjectId;
@@ -176,65 +145,52 @@ export interface IConversation extends Document {
   isActive: boolean;
 }
 
-export type MessageType = 'text' | 'image' | 'offer' | 'system';
-
 export interface IMessage extends Document {
+  _id: Types.ObjectId;
   conversation: Types.ObjectId;
   sender: Types.ObjectId;
   content: string;
-  messageType: MessageType;
+  messageType: 'text' | 'image' | 'offer' | 'system';
   imageUrl?: string;
   readBy: Array<{ user: Types.ObjectId; readAt: Date }>;
   isDeleted: boolean;
-  deletedAt?: Date;
   isReported: boolean;
-  reportedAt?: Date;
+  createdAt: Date;
 }
 
-// ─── Payment ──────────────────────────────────────────────────────────────────
-
-export type PaymentType = 'boost' | 'featured' | 'seller_plan' | 'verification' | 'category_sponsor';
-export type PaymentStatus = 'pending' | 'success' | 'failed' | 'refunded';
-export type PaymentGateway = 'paystack' | 'flutterwave';
-
 export interface IPayment extends Document {
+  _id: Types.ObjectId;
   user: Types.ObjectId;
   listing?: Types.ObjectId;
-  type: PaymentType;
+  type: 'boost' | 'featured' | 'seller_plan' | 'verification' | 'category_sponsor';
   amount: number;
   currency: string;
-  status: PaymentStatus;
-  gateway?: PaymentGateway;
+  status: 'pending' | 'success' | 'failed' | 'refunded';
+  gateway?: 'paystack' | 'flutterwave';
   gatewayReference?: string;
   gatewayResponse?: Record<string, unknown>;
   paidAt?: Date;
-  refundedAt?: Date;
-  refundReason?: string;
   metadata?: Record<string, unknown>;
 }
 
-// ─── Promotion ────────────────────────────────────────────────────────────────
-
-export type PromotionType = 'boost' | 'featured' | 'category_top' | 'homepage_banner';
-
 export interface IPromotionPackage extends Document {
+  _id: Types.ObjectId;
   name: string;
-  type: PromotionType;
+  type: 'boost' | 'featured' | 'category_top' | 'homepage_banner';
   durationDays: number;
   price: number;
   description?: string;
   isActive: boolean;
   priority: number;
-  maxPerCategory?: number;
-  applicableCategories: Types.ObjectId[];
 }
 
 export interface IActivePromotion extends Document {
+  _id: Types.ObjectId;
   listing: Types.ObjectId;
   seller: Types.ObjectId;
   package: Types.ObjectId;
   payment: Types.ObjectId;
-  type: PromotionType;
+  type: string;
   startsAt: Date;
   endsAt: Date;
   isActive: boolean;
@@ -242,117 +198,61 @@ export interface IActivePromotion extends Document {
   clicks: number;
 }
 
-// ─── Report ───────────────────────────────────────────────────────────────────
-
-export type ReportReason =
-  | 'scam_or_fraud'
-  | 'fake_listing'
-  | 'prohibited_item'
-  | 'wrong_category'
-  | 'spam'
-  | 'offensive_content'
-  | 'counterfeit'
-  | 'harassment'
-  | 'other';
-
-export type ReportStatus =
-  | 'open'
-  | 'under_review'
-  | 'resolved_action_taken'
-  | 'resolved_no_action'
-  | 'dismissed';
-
-export type ReportPriority = 'low' | 'medium' | 'high' | 'critical';
-export type ReportTargetType = 'listing' | 'user' | 'message';
-export type ReportAction =
-  | 'none'
-  | 'listing_removed'
-  | 'listing_hidden'
-  | 'user_warned'
-  | 'user_suspended'
-  | 'user_banned';
-
 export interface IReport extends Document {
+  _id: Types.ObjectId;
   reporter: Types.ObjectId;
-  targetType: ReportTargetType;
+  targetType: 'listing' | 'user' | 'message';
   targetListing?: Types.ObjectId;
   targetUser?: Types.ObjectId;
-  targetMessage?: Types.ObjectId;
-  reason: ReportReason;
+  reason: string;
   description?: string;
-  status: ReportStatus;
+  status: string;
   assignedTo?: Types.ObjectId;
   resolvedBy?: Types.ObjectId;
   resolvedAt?: Date;
   resolutionNote?: string;
-  actionTaken?: ReportAction;
-  priority: ReportPriority;
+  actionTaken?: string;
+  priority: string;
 }
 
-// ─── Review ───────────────────────────────────────────────────────────────────
-
-export type ReviewType = 'buyer_to_seller' | 'seller_to_buyer';
-
 export interface IReview extends Document {
+  _id: Types.ObjectId;
   reviewer: Types.ObjectId;
   reviewee: Types.ObjectId;
   listing?: Types.ObjectId;
   rating: number;
   comment?: string;
-  type: ReviewType;
+  type: 'buyer_to_seller' | 'seller_to_buyer';
   isVisible: boolean;
 }
 
-// ─── Referral ─────────────────────────────────────────────────────────────────
-
-export type ReferralType = 'state' | 'church' | 'department' | 'campaign' | 'general';
-
 export interface IReferralCampaign extends Document {
+  _id: Types.ObjectId;
   name: string;
   code: string;
-  type: ReferralType;
+  type: string;
   stateCode?: string;
   churchName?: string;
   coordinatorName?: string;
-  coordinatorUser?: Types.ObjectId;
   isActive: boolean;
-  expiresAt?: Date;
   totalClicks: number;
   totalRegistrations: number;
   totalListings: number;
   totalSellers: number;
 }
 
-// ─── Notification ─────────────────────────────────────────────────────────────
-
-export type NotificationType =
-  | 'new_message'
-  | 'listing_approved'
-  | 'listing_rejected'
-  | 'listing_expiring'
-  | 'boost_expired'
-  | 'new_review'
-  | 'account_warning'
-  | 'account_suspended'
-  | 'report_resolved'
-  | 'verification_approved'
-  | 'verification_rejected'
-  | 'system';
-
-export type NotificationChannel = 'in_app' | 'push' | 'email' | 'sms';
-
 export interface INotification extends Document {
+  _id: Types.ObjectId;
   user: Types.ObjectId;
-  type: NotificationType;
+  type: string;
   title: string;
   body: string;
   data?: Record<string, unknown>;
   isRead: boolean;
   readAt?: Date;
-  channel: NotificationChannel;
+  channel: string;
+  createdAt: Date;
 }
-
-// ─── Misc ─────────────────────────────────────────────────────────────────────
 
 export interface ISavedListing extends Document {
   user: Types.ObjectId;
@@ -366,16 +266,13 @@ export interface IAuditLog extends Document {
   targetId?: Types.ObjectId;
   details?: Record<string, unknown>;
   ip?: string;
-  userAgent?: string;
 }
 
-// ─── Express Extensions ───────────────────────────────────────────────────────
-
-export interface AuthRequest extends Request {
+// GraphQL Context
+export interface GraphQLContext {
   user?: IUser;
+  req: Request;
 }
-
-// ─── Email ────────────────────────────────────────────────────────────────────
 
 export interface SendEmailOptions {
   email: string;
@@ -383,5 +280,4 @@ export interface SendEmailOptions {
   template?: string;
   data?: Record<string, string>;
   html?: string;
-  text?: string;
 }
