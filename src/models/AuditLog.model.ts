@@ -10,7 +10,7 @@ const AuditLogSchema = new Schema<IAuditLog>(
     details: { type: Schema.Types.Mixed },
     ip: String,
     userAgent: String,
-  },
+  } as any,
   { timestamps: true }
 );
 

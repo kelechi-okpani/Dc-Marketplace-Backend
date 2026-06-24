@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 import { IPromotionPackage, IActivePromotion } from '../types';
 
-const PromotionPackageSchema = new Schema<IPromotionPackage>(
+const PromotionPackageSchema = new Schema(
   {
     name: { type: String, required: true },
     type: { type: String, enum: ['boost','featured','category_top','homepage_banner'], required: true },

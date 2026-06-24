@@ -22,7 +22,7 @@ const ConversationSchema = new Schema<IConversation>(
 ConversationSchema.index({ buyer: 1, seller: 1, listing: 1 }, { unique: true });
 ConversationSchema.index({ participants: 1 });
 
-const MessageSchema = new Schema<IMessage>(
+const MessageSchema = new Schema<IMessage & { deletedAt?: Date; reportedAt?: Date }>(
   {
     conversation: { type: Schema.Types.ObjectId, ref: 'Conversation', required: true },
     sender: { type: Schema.Types.ObjectId, ref: 'User', required: true },
