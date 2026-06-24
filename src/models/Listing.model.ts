@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 import { IListing } from '../types';
 
-const ListingSchema = new Schema<IListing>(
+const ListingSchema = new Schema(
   {
     title: { type: String, required: true, trim: true, maxlength: 150 },
     description: { type: String, required: true, maxlength: 5000 },

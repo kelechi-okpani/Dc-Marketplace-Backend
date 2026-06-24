@@ -1,7 +1,9 @@
 import mongoose, { Schema } from 'mongoose';
 import { IReport } from '../types';
 
-const ReportSchema = new Schema<IReport>(
+type ReportSchemaType = IReport & { targetMessage?: mongoose.Types.ObjectId };
+
+const ReportSchema = new Schema<ReportSchemaType>(
   {
     reporter: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     targetType: { type: String, enum: ['listing','user','message'], required: true },

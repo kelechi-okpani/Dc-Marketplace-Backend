@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 import { IReferralCampaign } from '../types';
 
-const ReferralCampaignSchema = new Schema<IReferralCampaign>(
+const ReferralCampaignSchema = new Schema(
   {
     name: { type: String, required: true },
     code: { type: String, required: true, unique: true, uppercase: true },

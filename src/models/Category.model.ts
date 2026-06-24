@@ -1,5 +1,19 @@
 import mongoose, { Schema } from 'mongoose';
-import { ICategory, IField } from '../types';
+import { ICategory } from '../types';
+
+interface IField {
+  name: string;
+  label: string;
+  type: 'text' | 'number' | 'select' | 'multiselect' | 'boolean' | 'date';
+  options?: string[];
+  required?: boolean;
+  order?: number;
+}
+
+interface ICategorySchema extends ICategory {
+  metaTitle?: string;
+  metaDescription?: string;
+}
 
 const FieldSchema = new Schema<IField>({
   name: { type: String, required: true },
@@ -10,7 +24,7 @@ const FieldSchema = new Schema<IField>({
   order: { type: Number, default: 0 },
 });
 
-const CategorySchema = new Schema<ICategory>(
+const CategorySchema = new Schema<ICategorySchema>(
   {
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true },
@@ -35,4 +49,4 @@ CategorySchema.virtual('subcategories', {
   foreignField: 'parent',
 });
 
-export default mongoose.model<ICategory>('Category', CategorySchema);
+export default mongoose.model<ICategorySchema>('Category', CategorySchema);

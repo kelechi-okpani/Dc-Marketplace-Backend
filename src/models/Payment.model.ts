@@ -14,7 +14,7 @@ const PaymentSchema = new Schema<IPayment>(
     gatewayResponse: { type: Schema.Types.Mixed },
     paidAt: Date, refundedAt: Date, refundReason: String,
     metadata: { type: Schema.Types.Mixed },
-  },
+  } as any,
   { timestamps: true }
 );
 
