@@ -9,6 +9,7 @@ const NotificationSchema = new Schema<INotification>(
       enum: ['new_message','listing_approved','listing_rejected','listing_expiring','boost_expired','new_review','account_warning','account_suspended','report_resolved','verification_approved','verification_rejected','system'],
       required: true,
     },
+    
     title: { type: String, required: true },
     body: { type: String, required: true },
     data: { type: Schema.Types.Mixed },
